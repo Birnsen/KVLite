@@ -8,32 +8,20 @@ using System.Runtime.InteropServices;
 
 namespace KVL
 {
-    internal class KJSqlite : KJApi<string>
+    internal class KJ : KVBase<string>, JsonApi
     {
-        private readonly SQLiteConnection _connection;
-
-        public static KJSqlite CreateWithFileInfo(FileInfo file)
+        public static KJ CreateWithFileInfo(FileInfo file)
         {
-            return new KJSqlite(file.FullName);
+            return new KJ(file.FullName);
         }
 
-        public static KJSqlite CreateInMemory()
+        public static KJ CreateInMemory()
         {
-            return new KJSqlite(":memory:");
+            return new KJ(":memory:");
         }
 
-        private KJSqlite(string path)
+        private KJ(string path) : base(path)
         {
-            var builder = new SQLiteConnectionStringBuilder
-            {
-                DataSource = path,
-                JournalMode = SQLiteJournalModeEnum.Wal,
-                Version = 3
-            };
-            
-            _connection = new SQLiteConnection(builder.ToString());
-            _connection.Open();
-
             _connection.EnableExtensions(true);
 
             var extPath = "./runtimes/{0}/native/netstandard2.0/SQLite.Interop.dll";
@@ -67,7 +55,7 @@ namespace KVL
             _ = cmd.ExecuteNonQuery();
         }
 
-        public async Task Add(byte[] key, string value)
+        public override async Task Add(byte[] key, string value)
         {
             using var cmd = _connection.CreateCommand();
             cmd.CommandText = $@"
@@ -83,17 +71,7 @@ namespace KVL
             _ = await cmd.ExecuteNonQueryAsync();
         }
 
-        public async Task Add(IEnumerable<KeyValuePair<byte[], string>> entries)
-        {
-            using var trx = _connection.BeginTransaction();
-            foreach(var e in entries)
-            {
-                await Add(e.Key, e.Value);
-            }
-            trx.Commit();
-        }
-
-        public async Task Update(byte[] key, string value)
+        public override async Task Update(byte[] key, string value)
         {
             using var cmd = _connection.CreateCommand();
             cmd.CommandText = $@"
@@ -106,95 +84,6 @@ namespace KVL
             cmd.Parameters.AddWithValue("value", value);
 
             _ = await cmd.ExecuteNonQueryAsync();
-        }
-
-        public async Task Update(IEnumerable<KeyValuePair<byte[],string>> entries)
-        {
-            using var trx = _connection.BeginTransaction();
-            foreach(var e in entries)
-            {
-                await Update(e.Key, e.Value);
-            }
-            trx.Commit();
-        }
-
-        public async Task Delete(byte[] key)
-        {
-            using var cmd = _connection.CreateCommand();
-            cmd.CommandText = $@"
-                DELETE FROM {nameof(keyvaluestore)} 
-                WHERE {keyvaluestore.key} = @key
-                ";
-
-            cmd.Parameters.AddWithValue("key", key);
-
-            _ = await cmd.ExecuteNonQueryAsync();
-        }
-
-        public async Task Delete(IEnumerable<byte[]> keys)
-        {
-            using var trx = _connection.BeginTransaction();
-            foreach(var k in keys)
-            {
-                await Delete(k);
-            }
-            trx.Commit();
-        }
-
-        public async Task<string> Get(byte[] key)
-        {
-            using var cmd = _connection.CreateCommand();
-            cmd.CommandText = $@"
-                SELECT {keyvaluestore.value} FROM {nameof(keyvaluestore)} 
-                WHERE {keyvaluestore.key} = @key
-                ";
-
-            cmd.Parameters.AddWithValue("key", key);
-            var ret = await cmd.ExecuteScalarAsync();
-
-            return (string) ret ?? throw new Exception("Key not found!");
-        }
-
-        public async IAsyncEnumerable<KeyValuePair<byte[], string>> Get()
-        {
-            var pageCounter = 0;
-            var entryCounter = 0;
-            do
-            {
-                entryCounter = 0;
-                await foreach(var kv in get(pageCounter * 512, 512))
-                {
-                    entryCounter++;
-                    yield return kv;
-                }   
-
-                pageCounter++;
-            } while(entryCounter > 0);
-        }
-
-        private async IAsyncEnumerable<KeyValuePair<byte[], string>> get(long page, int maxSize)
-        {
-            //Propably faster then LIMIT/OFFSET as per: http://blog.ssokolow.com/archives/2009/12/23/sql-pagination-without-offset/
-            //TODO Benchmark
-            using var cmd = _connection.CreateCommand();
-            cmd.CommandText = $@"
-                SELECT * FROM {nameof(keyvaluestore)} 
-                WHERE rowid NOT IN (
-                    SELECT rowid FROM {nameof(keyvaluestore)}
-                    ORDER BY rowid ASC LIMIT {page} 
-                )
-                ORDER BY rowid ASC LIMIT {maxSize}
-                ";
-
-            var reader = await cmd.ExecuteReaderAsync();
-
-            while(await reader.ReadAsync())
-            {
-                var key = (byte[])reader.GetValue(1);
-                var value = reader.GetString(2);
-
-                yield return new KeyValuePair<byte[], string>(key, value);
-            }
         }
 
         public async Task Insert<T>(byte[] key, string path, T jsonToInsert)
@@ -271,39 +160,5 @@ namespace KVL
 
             _ = await cmd.ExecuteNonQueryAsync();
         }
-
-        
-        #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    _connection.Dispose();
-                }
-
-                disposedValue = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
-        #endregion
-
-        enum keyvaluestore
-        {
-            rowid,
-            key,
-            value
-
-        }
     }
-
-
 }

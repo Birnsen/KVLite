@@ -10,19 +10,9 @@ namespace KVL
 {
     internal class KVBase<T> : KVApi<T>
     {
-        private readonly SQLiteConnection _connection;
+        protected readonly SQLiteConnection _connection;
 
-        public static KVBase<T> CreateWithFileInfo(FileInfo file)
-        {
-            return new KVBase<T>(file.FullName);
-        }
-
-        public static KVBase<T> CreateInMemory()
-        {
-            return new KVBase<T>(":memory:");
-        }
-
-        private KVBase(string path)
+        protected KVBase(string path)
         {
             var builder = new SQLiteConnectionStringBuilder
             {
@@ -33,23 +23,9 @@ namespace KVL
             
             _connection = new SQLiteConnection(builder.ToString());
             _connection.Open();
-
-            createTable();
         }
 
-        private void createTable()
-        {
-            using var cmd = _connection.CreateCommand();
-            cmd.CommandText = $@"
-                CREATE TABLE IF NOT EXISTS {nameof(keyvaluestore)}(
-                    {keyvaluestore.rowid} INTEGER PRIMARY KEY AUTOINCREMENT,
-                    {keyvaluestore.key} BLOB UNIQUE,
-                    {keyvaluestore.value} BLOB
-                )";
-            _ = cmd.ExecuteNonQuery();
-        }
-
-        public async Task Add(byte[] key, T value)
+        public virtual async Task Add(byte[] key, T value)
         {
             using var cmd = _connection.CreateCommand();
             cmd.CommandText = $@"
@@ -75,7 +51,7 @@ namespace KVL
             trx.Commit();
         }
 
-        public async Task Update(byte[] key, T value)
+        public virtual async Task Update(byte[] key, T value)
         {
             using var cmd = _connection.CreateCommand();
             cmd.CommandText = $@"
@@ -201,7 +177,7 @@ namespace KVL
         }
         #endregion
 
-        enum keyvaluestore
+        public enum keyvaluestore
         {
             rowid,
             key,
