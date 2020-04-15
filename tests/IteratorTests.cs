@@ -26,7 +26,7 @@ namespace KVL.Tests
         public async Task TestGetAll()
         {
             var kvl = KVLite.CreateInMemory();
-            var entryCount = 10240;
+            var entryCount = 1024;
 
             var entries = Enumerable
                 .Range(0, entryCount)
@@ -54,7 +54,7 @@ namespace KVL.Tests
         public async Task TestGetAllPagination()
         {
             using var kvl = KVLite.CreateInMemory();
-            var entryCount = 10240;
+            var entryCount = 1024;
 
             var entries = Enumerable
                 .Range(0, entryCount)
