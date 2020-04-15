@@ -7,7 +7,7 @@ using System.Text.Json;
 namespace KVL.Tests
 {
     [TestClass]
-    public class JsonTests
+    public class BasicJsonTests
     {
         [TestMethod]
         public async Task TestAdd()
