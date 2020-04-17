@@ -56,7 +56,7 @@ namespace KVL.Tests
             var kvl = KVLite.CreateInMemory();
             var key = Encoding.UTF8.GetBytes("key");
 
-            await Assert.ThrowsExceptionAsync<Exception>(async () => await kvl.Get(key), "Key not found!");//*/
+            await Assert.ThrowsExceptionAsync<Exception>(() => kvl.Get(key), "Key not found!");//*/
         }
 
         [TestMethod]
@@ -100,7 +100,7 @@ namespace KVL.Tests
 
             await kvl.Update(key, newValue);
 
-            await Assert.ThrowsExceptionAsync<Exception>(async () => await kvl.Get(key), "Key not found!");
+            await Assert.ThrowsExceptionAsync<Exception>(() => kvl.Get(key), "Key not found!");
         }
 
         [TestMethod]
@@ -113,7 +113,7 @@ namespace KVL.Tests
             await kvl.Add(key, value);
             await kvl.Delete(key);
 
-            await Assert.ThrowsExceptionAsync<Exception>(async () => await kvl.Get(key), "Key not found!");
+            await Assert.ThrowsExceptionAsync<Exception>(() => kvl.Get(key), "Key not found!");
         }
 
         [TestMethod]

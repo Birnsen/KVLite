@@ -77,7 +77,7 @@ namespace KVL.Tests
             for(var i = 0; i < 1000; i++)
             {
                 var key = Encoding.UTF8.GetBytes($"key{i}");
-                await Assert.ThrowsExceptionAsync<Exception>(async () => await kvl.Get(key), "Key not found!");
+                await Assert.ThrowsExceptionAsync<Exception>(() => kvl.Get(key), "Key not found!");
             }
         }
 
