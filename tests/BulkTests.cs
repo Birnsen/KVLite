@@ -91,7 +91,8 @@ namespace KVL.Tests
 
             foreach(var key in keys)
             {
-                await Assert.ThrowsExceptionAsync<Exception>(() => kvl.Get(key), "Key not found!");
+                var res = await kvl.Get(key);
+                Assert.IsTrue(res.IsNone);
             }
 
         }

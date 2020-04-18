@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="LanguageExt.Core" Version="3.4.13" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.112.1" />
     <PackageReference Include="System.Linq.Async" Version="4.0.0" />
   </ItemGroup>

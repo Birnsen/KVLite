@@ -18,7 +18,8 @@ namespace KVL.Tests
             await kvl.Add(key, value);
             var res = await kvl.Get(key);
 
-            Assert.AreEqual("value", Encoding.UTF8.GetString(res));
+            Assert.IsTrue(res.IsSome);
+            Assert.AreEqual("value", Encoding.UTF8.GetString(res.Head()));
         }
 
         [TestMethod]
@@ -32,7 +33,8 @@ namespace KVL.Tests
             await kvl.Add(key, value);
             var res = await kvl.Get(key);
 
-            Assert.AreEqual("value", Encoding.UTF8.GetString(res));
+            Assert.IsTrue(res.IsSome);
+            Assert.AreEqual("value", Encoding.UTF8.GetString(res.Head()));
         }
 
         [TestMethod]
@@ -47,7 +49,8 @@ namespace KVL.Tests
             await kvl.Add(key, value2);
             var res = await kvl.Get(key);
 
-            Assert.AreEqual("value1", Encoding.UTF8.GetString(res));
+            Assert.IsTrue(res.IsSome);
+            Assert.AreEqual("value1", Encoding.UTF8.GetString(res.Head()));
         }
 
         [TestMethod]
@@ -56,7 +59,8 @@ namespace KVL.Tests
             var kvl = KVLite.CreateInMemory();
             var key = Encoding.UTF8.GetBytes("key");
 
-            await Assert.ThrowsExceptionAsync<Exception>(() => kvl.Get(key), "Key not found!");//*/
+            var res = await kvl.Get(key);
+            Assert.IsTrue(res.IsNone);
         }
 
         [TestMethod]
@@ -71,7 +75,8 @@ namespace KVL.Tests
             await kvl.Update(key, newValue);
 
             var res = await kvl.Get(key);
-            Assert.AreEqual("newValue", Encoding.UTF8.GetString(res));
+            Assert.IsTrue(res.IsSome);
+            Assert.AreEqual("newValue", Encoding.UTF8.GetString(res.Head()));
         }
 
         [TestMethod]
@@ -87,7 +92,8 @@ namespace KVL.Tests
             await kvl.Update(key, newValue);
 
             var res = await kvl.Get(key);
-            Assert.AreEqual("newValue", Encoding.UTF8.GetString(res));
+            Assert.IsTrue(res.IsSome);
+            Assert.AreEqual("newValue", Encoding.UTF8.GetString(res.Head()));
         }
 
         [TestMethod]
@@ -100,7 +106,8 @@ namespace KVL.Tests
 
             await kvl.Update(key, newValue);
 
-            await Assert.ThrowsExceptionAsync<Exception>(() => kvl.Get(key), "Key not found!");
+            var res = await kvl.Get(key);
+            Assert.IsTrue(res.IsNone);
         }
 
         [TestMethod]
@@ -113,7 +120,8 @@ namespace KVL.Tests
             await kvl.Add(key, value);
             await kvl.Delete(key);
 
-            await Assert.ThrowsExceptionAsync<Exception>(() => kvl.Get(key), "Key not found!");
+            var res = await kvl.Get(key);
+            Assert.IsTrue(res.IsNone);
         }
 
         [TestMethod]

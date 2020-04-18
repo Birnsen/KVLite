@@ -1,10 +1,10 @@
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Data.SQLite;
-using System.IO;
 using System.Threading.Tasks;
+using LanguageExt;
+using static LanguageExt.Prelude;
 
 namespace KVL
 {
@@ -99,7 +99,7 @@ namespace KVL
             trx.Commit();
         }
 
-        public async Task<T> Get(byte[] key)
+        public async Task<Option<T>> Get(byte[] key)
         {
             using var cmd = _connection.CreateCommand();
             cmd.CommandText = $@"
@@ -110,7 +110,9 @@ namespace KVL
             cmd.Parameters.AddWithValue("key", key);
             var ret = await cmd.ExecuteScalarAsync();
 
-            return (T) ret ?? throw new Exception("Key not found!");
+            
+
+            return ret != null ? Some((T) ret) : None;
         }
 
         public async IAsyncEnumerable<KeyValuePair<byte[], T>> Get()

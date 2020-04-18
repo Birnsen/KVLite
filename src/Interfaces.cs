@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using LanguageExt;
 
 namespace KVL
 {
@@ -12,7 +13,7 @@ namespace KVL
         Task Update(IEnumerable<KeyValuePair<byte[], T>> entries);
         Task Delete(byte[] key);
         Task Delete(IEnumerable<byte[]> keys);
-        Task<T> Get(byte[] key);
+        Task<Option<T>> Get(byte[] key);
         IAsyncEnumerable<KeyValuePair<byte[], T>> Get();
     }
 

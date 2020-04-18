@@ -24,7 +24,8 @@ namespace KVL.Tests
             {
                 var key = Encoding.UTF8.GetBytes($"key{i}");
                 var res = await kvl.Get(key);
-                Assert.AreEqual("value", Encoding.UTF8.GetString(res));
+                Assert.IsTrue(res.IsSome);
+                Assert.AreEqual("value", Encoding.UTF8.GetString(res.Head()));
             }
         }
 
@@ -51,7 +52,8 @@ namespace KVL.Tests
             {
                 var key = Encoding.UTF8.GetBytes($"key{i}");
                 var res = await kvl.Get(key);
-                Assert.AreEqual("newValue", Encoding.UTF8.GetString(res));
+                Assert.IsTrue(res.IsSome);
+                Assert.AreEqual("newValue", Encoding.UTF8.GetString(res.Head()));
             }
         }
 
@@ -76,7 +78,8 @@ namespace KVL.Tests
             for(var i = 0; i < 1000; i++)
             {
                 var key = Encoding.UTF8.GetBytes($"key{i}");
-                await Assert.ThrowsExceptionAsync<Exception>(() => kvl.Get(key), "Key not found!");
+                var res = await kvl.Get(key);
+                Assert.IsTrue(res.IsNone);
             }
         }
 

@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System;
+using LanguageExt;
 
 namespace KVL
 {
@@ -130,7 +131,7 @@ namespace KVL
             await Task.WhenAll(tasks);
         }
 
-        public async Task<T> Get(byte[] key)
+        public async Task<Option<T>> Get(byte[] key)
         {
             var id = FNVHash.Hash(key, HASHTABLE_SIZE);
             return await _connections[id].Get(key);

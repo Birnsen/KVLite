@@ -90,12 +90,12 @@ namespace KVL.Tests
             await kvl.Add(entries);
 
             var keys = entries.Select(x => x.Key);
-
             await kvl.Delete(keys);
 
             foreach(var key in keys)
             {
-                await Assert.ThrowsExceptionAsync<Exception>(() => kvl.Get(key), "Key not found!");
+                var res = await kvl.Get(key);
+                Assert.IsTrue(res.IsNone);
             }
 
         }
