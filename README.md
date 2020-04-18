@@ -1,5 +1,5 @@
 # What is KVLite
-Basically it is a Key-Value Store based on SQLite. More specifically it uses 128 SQLite Databases which are addressed by the hashed key. For the hashing the [FNV Hash function](https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function) is used.
+KVLite is a Key-Value Store based on SQLite. More specifically it uses 128 SQLite Databases which are addressed by the hashed key. For the hashing the [FNV Hash function](https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function) is used.
 KVLite has also special functions to interact with Json directly in the SQLite Database based on the [SQLite Json1 Extension](https://sqlite.org/json1.html).
 
 # Basic Usage
