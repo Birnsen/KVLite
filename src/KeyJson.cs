@@ -8,19 +8,19 @@ using System.Runtime.InteropServices;
 
 namespace KVL
 {
-    internal class KJ : KVBase<string>, JsonApi
+    internal class KeyJson : KVBase<string>, JsonApi
     {
-        public static KJ CreateWithFileInfo(FileInfo file)
+        public static KeyJson CreateWithFileInfo(FileInfo file)
         {
-            return new KJ(file.FullName);
+            return new KeyJson(file.FullName);
         }
 
-        public static KJ CreateInMemory()
+        public static KeyJson CreateInMemory()
         {
-            return new KJ(":memory:");
+            return new KeyJson(":memory:");
         }
 
-        private KJ(string path) : base(path)
+        private KeyJson(string path) : base(path)
         {
             _connection.EnableExtensions(true);
 

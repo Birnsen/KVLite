@@ -7,19 +7,19 @@ using System.Threading.Tasks;
 
 namespace KVL
 {
-    internal class KV : KVBase<byte[]>
+    internal class KeyValue : KVBase<byte[]>
     {
-        public static KV CreateWithFileInfo(FileInfo file)
+        public static KeyValue CreateWithFileInfo(FileInfo file)
         {
-            return new KV(file.FullName);
+            return new KeyValue(file.FullName);
         }
 
-        public static KV CreateInMemory()
+        public static KeyValue CreateInMemory()
         {
-            return new KV(":memory:");
+            return new KeyValue(":memory:");
         }
 
-        private KV(string path) : base(path)
+        private KeyValue(string path) : base(path)
         {
             createTable();
         }

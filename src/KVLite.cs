@@ -39,11 +39,11 @@ namespace KVL
         {
             if(typeof(T) == typeof(byte[]) )
             {
-                _connections = createConnections(_ => (KVApi<T>) KV.CreateInMemory());
+                _connections = createConnections(_ => (KVApi<T>) KeyValue.CreateInMemory());
             }
             else if(typeof(T) == typeof(string) )
             {
-                _connections = createConnections(_ => (KVApi<T>) KJ.CreateInMemory());
+                _connections = createConnections(_ => (KVApi<T>) KeyJson.CreateInMemory());
             }
             else
             {
@@ -57,11 +57,11 @@ namespace KVL
 
             if(typeof(T) == typeof(byte[]) )
             {
-                _connections = createConnections(x => (KVApi<T>) KV.CreateWithFileInfo(new FileInfo(string.Format(filePath, x))));
+                _connections = createConnections(x => (KVApi<T>) KeyValue.CreateWithFileInfo(new FileInfo(string.Format(filePath, x))));
             }
             else if(typeof(T) == typeof(string) )
             {
-                _connections = createConnections(x => (KVApi<T>) KJ.CreateWithFileInfo(new FileInfo(string.Format(filePath, x))));
+                _connections = createConnections(x => (KVApi<T>) KeyJson.CreateWithFileInfo(new FileInfo(string.Format(filePath, x))));
             }
             else
             {
