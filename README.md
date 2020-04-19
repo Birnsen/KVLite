@@ -39,8 +39,3 @@ await kvl.Replace(key, "$.hello", "newValue");// {"hello": "newValue", "world": 
 await kvl.Set(key, "$.hello", "[1,2,3]");// {"hello": [1,2,3], "world": "value"}
 await kvl.Insert(key, "$.hello[#]", 4); // {"hello": [1,2,3,4], "world": "value"}
 ```
-# Who Uses KVLite
-I do :)
-# Why
-Because!
-
