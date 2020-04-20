@@ -3,7 +3,10 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <PackageId>KVLite</PackageId>
-    <Version>0.5.0</Version>
+    <Version>0.5.2</Version>
+    <Description>KVLite is a Key-Value Store based on SQLite. More specifically it uses 128 SQLite Databases which are addressed by the hashed key. For the hashing the FNV Hash function is used. KVLite has also special functions to interact with Json directly in the SQLite Database based on the SQLite Json1 Extension.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <projectUrl>https://github.com/Birnsen/KVLite</projectUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
