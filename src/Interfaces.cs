@@ -19,6 +19,8 @@ namespace KVL
 
     public interface JsonApi
     {
+        KVTransaction BeginTransaction(byte[] key);
+        Task<KVTransaction> BeginTransactionAsync(byte[] key);
         Task Insert<T>(byte[] key, string path, T jsonToInsert);
         Task Replace<T>(byte[] key, string path, T jsonToReplace);
         Task Set<T>(byte[] key, string path, T jsonToSet);

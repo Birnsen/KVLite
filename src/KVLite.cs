@@ -77,6 +77,18 @@ namespace KVL
                 .ToArray();
         }
 
+        public KVTransaction BeginTransaction(byte[] key)
+        {
+            var id = FNVHash.Hash(key, HASHTABLE_SIZE);
+            return ((JsonApi) _connections[id]).BeginTransaction(key);
+        }
+
+        public async Task<KVTransaction> BeginTransactionAsync(byte[] key)
+        {
+            var id = FNVHash.Hash(key, HASHTABLE_SIZE);
+            return await ((JsonApi) _connections[id]).BeginTransactionAsync(key);
+        }
+
         public async Task Add(byte[] key, T value)
         {
             var id = FNVHash.Hash(key, HASHTABLE_SIZE);

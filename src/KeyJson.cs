@@ -55,6 +55,16 @@ namespace KVL
             _ = cmd.ExecuteNonQuery();
         }
 
+        public KVTransaction BeginTransaction(byte[] _)
+        {
+            return KVTransaction.BeginTransaction(_connection);
+        }
+
+        public async Task<KVTransaction> BeginTransactionAsync(byte[] _)
+        {
+            return await KVTransaction.BeginTransactionAsync(_connection);
+        }
+        
         public override async Task Add(byte[] key, string value)
         {
             using var cmd = _connection.CreateCommand();
