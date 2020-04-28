@@ -136,9 +136,10 @@ namespace KVL.Tests
             var kvl = KVLite.CreateJsonInMemory();
             var key = Encoding.UTF8.GetBytes("key");
             var value = JsonSerializer.Serialize(new {hello = "value"});
+            var value2 = JsonSerializer.Serialize("value");
 
             await kvl.Add(key, value);
-            await kvl.Insert(key, "$.world", "value");
+            await kvl.Insert(key, "$.world", value2);
             var res = await kvl.Get(key);
 
             var expected = JsonSerializer.Serialize(new {hello = "value", world = "value"});
@@ -151,9 +152,10 @@ namespace KVL.Tests
             var kvl = KVLite.CreateJsonInMemory();
             var key = Encoding.UTF8.GetBytes("key");
             var value = JsonSerializer.Serialize(new {hello = "value"});
+            var newValue = JsonSerializer.Serialize("value");
 
             await kvl.Add(key, value);
-            await kvl.Insert(key, "$.hello", "newValue");
+            await kvl.Insert(key, "$.hello", newValue);
             var res = await kvl.Get(key);
 
             Assert.AreEqual(value, res);
@@ -180,9 +182,10 @@ namespace KVL.Tests
             var kvl = KVLite.CreateJsonInMemory();
             var key = Encoding.UTF8.GetBytes("key");
             var value = JsonSerializer.Serialize(new {hello = "value"});
+            var newValue = JsonSerializer.Serialize("newValue");
 
             await kvl.Add(key, value);
-            await kvl.Replace(key, "$.hello", "newValue");
+            await kvl.Replace(key, "$.hello", newValue);
             var res = await kvl.Get(key);
 
             var expected = JsonSerializer.Serialize(new {hello = "newValue"});
@@ -195,9 +198,10 @@ namespace KVL.Tests
             var kvl = KVLite.CreateJsonInMemory();
             var key = Encoding.UTF8.GetBytes("key");
             var value = JsonSerializer.Serialize(new {hello = "value"});
+            var value2 = JsonSerializer.Serialize("value");
 
             await kvl.Add(key, value);
-            await kvl.Replace(key, "$.world", "value");
+            await kvl.Replace(key, "$.world", value2);
             var res = await kvl.Get(key);
 
             Assert.AreEqual(value, res);
@@ -209,9 +213,10 @@ namespace KVL.Tests
             var kvl = KVLite.CreateJsonInMemory();
             var key = Encoding.UTF8.GetBytes("key");
             var value = JsonSerializer.Serialize(new {hello = "value"});
+            var newValue = JsonSerializer.Serialize("newValue");
 
             await kvl.Add(key, value);
-            await kvl.Set(key, "$.hello", "newValue");
+            await kvl.Set(key, "$.hello", newValue);
             var res = await kvl.Get(key);
 
             var expected = JsonSerializer.Serialize(new {hello = "newValue"});
@@ -224,9 +229,10 @@ namespace KVL.Tests
             var kvl = KVLite.CreateJsonInMemory();
             var key = Encoding.UTF8.GetBytes("key");
             var value = JsonSerializer.Serialize(new {hello = "value"});
+            var value2 = JsonSerializer.Serialize("value");
 
             await kvl.Add(key, value);
-            await kvl.Set(key, "$.world", "value");
+            await kvl.Set(key, "$.world", value2);
             var res = await kvl.Get(key);
 
             var expected = JsonSerializer.Serialize(new {hello = "value", world = "value"});

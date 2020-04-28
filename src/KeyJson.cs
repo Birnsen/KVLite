@@ -92,7 +92,7 @@ namespace KVL
             cmd.CommandText = $@"
                 UPDATE {nameof(keyvaluestore)} 
                 SET {keyvaluestore.value} = (
-                    SELECT json_insert({keyvaluestore.value}, @path, @value)
+                    SELECT json_insert({keyvaluestore.value}, @path, json(@value))
                     FROM {nameof(keyvaluestore)}
                     WHERE key = @key)
                 WHERE {keyvaluestore.key} = @key
@@ -111,7 +111,7 @@ namespace KVL
             cmd.CommandText = $@"
                 UPDATE {nameof(keyvaluestore)} 
                 SET {keyvaluestore.value} = (
-                    SELECT json_replace({keyvaluestore.value}, @path, @value)
+                    SELECT json_replace({keyvaluestore.value}, @path, json(@value))
                     FROM {nameof(keyvaluestore)}
                     WHERE key = @key)
                 WHERE {keyvaluestore.key} = @key
@@ -130,7 +130,7 @@ namespace KVL
             cmd.CommandText = $@"
                 UPDATE {nameof(keyvaluestore)} 
                 SET {keyvaluestore.value} = (
-                    SELECT json_set({keyvaluestore.value}, @path, @value)
+                    SELECT json_set({keyvaluestore.value}, @path, json(@value))
                     FROM {nameof(keyvaluestore)}
                     WHERE key = @key)
                 WHERE {keyvaluestore.key} = @key
