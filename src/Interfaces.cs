@@ -9,8 +9,8 @@ namespace KVL
     {
         Task Add(byte[] key, T value);
         Task Add(IEnumerable<KeyValuePair<byte[], T>> entries);
-        Task AddorRep(byte[] key, T value);
-        Task AddorRep(IEnumerable<KeyValuePair<byte[], T>> entries);
+        Task Upsert(byte[] key, T value);
+        Task Upsert(IEnumerable<KeyValuePair<byte[], T>> entries);
         Task Update(byte[] key, T value);
         Task Update(IEnumerable<KeyValuePair<byte[], T>> entries);
         Task Delete(byte[] key);
