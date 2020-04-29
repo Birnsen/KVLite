@@ -107,19 +107,19 @@ namespace KVL
             await Task.WhenAll(tasks);
         }
 
-        public async Task AddorRep(byte[] key, T value)
+        public async Task Upsert(byte[] key, T value)
         {
             var id = FNVHash.Hash(key, HASHTABLE_SIZE);
-            await _connections[id].AddorRep(key, value);
+            await _connections[id].Upsert(key, value);
         }
 
-        public async Task AddorRep(IEnumerable<KeyValuePair<byte[], T>> entries)
+        public async Task Upsert(IEnumerable<KeyValuePair<byte[], T>> entries)
         {
             var tasks = entries
                 .GroupBy(kvp => FNVHash.Hash(kvp.Key, HASHTABLE_SIZE))
                 .Select(group => Task.Run(async delegate
                 {
-                    await _connections[group.Key].AddorRep(group);
+                    await _connections[group.Key].Upsert(group);
                 }));
 
             await Task.WhenAll(tasks);
