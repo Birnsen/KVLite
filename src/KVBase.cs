@@ -51,6 +51,33 @@ namespace KVL
             trx.Commit();
         }
 
+
+        public virtual async Task AddorRep(byte[] key, T value)
+        {
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = $@"
+                INSERT OR REPLACE INTO {nameof(keyvaluestore)} (
+                    {keyvaluestore.key},
+                    {keyvaluestore.value}
+                    ) VALUES (@key, @value)
+                ";
+
+            cmd.Parameters.AddWithValue("key", key);
+            cmd.Parameters.AddWithValue("value", value);
+
+            _ = await cmd.ExecuteNonQueryAsync();
+        }
+
+        public async Task AddorRep(IEnumerable<KeyValuePair<byte[], T>> entries)
+        {
+            using var trx = _connection.BeginTransaction();
+            foreach (var e in entries)
+            {
+                await AddorRep(e.Key, e.Value);
+            }
+            trx.Commit();
+        }
+
         public virtual async Task Update(byte[] key, T value)
         {
             using var cmd = _connection.CreateCommand();
