@@ -81,7 +81,7 @@ namespace KVL
             _ = await cmd.ExecuteNonQueryAsync();
         }
 
-        public override async Task AddorRep(byte[] key, string value)
+        public override async Task Upsert(byte[] key, string value)
         {
             using var cmd = _connection.CreateCommand();
             cmd.CommandText = $@"
