@@ -52,7 +52,7 @@ namespace KVL
         }
 
 
-        public virtual async Task AddorRep(byte[] key, T value)
+        public virtual async Task Upsert(byte[] key, T value)
         {
             using var cmd = _connection.CreateCommand();
             cmd.CommandText = $@"
@@ -68,12 +68,12 @@ namespace KVL
             _ = await cmd.ExecuteNonQueryAsync();
         }
 
-        public async Task AddorRep(IEnumerable<KeyValuePair<byte[], T>> entries)
+        public async Task Upsert(IEnumerable<KeyValuePair<byte[], T>> entries)
         {
             using var trx = _connection.BeginTransaction();
             foreach (var e in entries)
             {
-                await AddorRep(e.Key, e.Value);
+                await Upsert(e.Key, e.Value);
             }
             trx.Commit();
         }
