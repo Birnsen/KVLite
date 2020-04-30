@@ -81,6 +81,22 @@ namespace KVL
             _ = await cmd.ExecuteNonQueryAsync();
         }
 
+        public override async Task Upsert(byte[] key, string value)
+        {
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = $@"
+                INSERT OR REPLACE INTO {nameof(keyvaluestore)} (
+                    {keyvaluestore.key},
+                    {keyvaluestore.value}
+                    ) VALUES (@key, json(@value))
+                ";
+
+            cmd.Parameters.AddWithValue("key", key);
+            cmd.Parameters.AddWithValue("value", value);
+
+            _ = await cmd.ExecuteNonQueryAsync();
+        }
+
         public override async Task Update(byte[] key, string value)
         {
             using var cmd = _connection.CreateCommand();
