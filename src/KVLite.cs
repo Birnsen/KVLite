@@ -161,6 +161,22 @@ namespace KVL
             await Task.WhenAll(tasks);
         }
 
+        public async Task<long> Count()
+        {
+            var tasks = _connections
+                .Select(c => c.Count());
+
+            return (await Task.WhenAll(tasks)).Sum();
+        }
+
+        public async Task<long> Count<S>(string path, Compare comparison, S value)
+        {
+            var tasks = _connections
+                .Select(c =>((JsonApi) c).Count(path, comparison, value));
+
+            return (await Task.WhenAll(tasks)).Sum();
+        }
+
         public async Task<Option<T>> Get(byte[] key)
         {
             var id = FNVHash.Hash(key, HASHTABLE_SIZE);

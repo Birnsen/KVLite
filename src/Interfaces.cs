@@ -15,6 +15,7 @@ namespace KVL
         Task Update(IEnumerable<KeyValuePair<byte[], T>> entries);
         Task Delete(byte[] key);
         Task Delete(IEnumerable<byte[]> keys);
+        Task<long> Count();
         Task<Option<T>> Get(byte[] key);
         IAsyncEnumerable<KeyValuePair<byte[], T>> Get();
     }
@@ -27,6 +28,17 @@ namespace KVL
         Task Replace<T>(byte[] key, string path, T jsonToReplace);
         Task Set<T>(byte[] key, string path, T jsonToSet);
         Task Remove(byte[] key, params string[] path);
+        Task<long> Count<T>(string path, Compare comparison, T value);
+    }
+
+    public enum Compare
+    {
+        EQ,
+        NE,
+        GT,
+        LT,
+        GE,
+        LE
     }
 
     public interface KJApi<T> : KVApi<T>, JsonApi

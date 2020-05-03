@@ -133,5 +133,23 @@ namespace KVL.Tests
 
             await kvl.Delete(key);
         }
+
+        [TestMethod]
+        public async Task TestCount()
+        {
+            var kvl = KVLite.CreateInMemory();
+            var value = Encoding.UTF8.GetBytes("value");
+
+            for(var i = 0; i < 1000; i++)
+            {
+                var key = Encoding.UTF8.GetBytes($"key{i}");
+                await kvl.Add(key, value);
+            }
+
+            var count = await kvl.Count();
+
+            Assert.AreEqual(1000, count);
+        }
+
     }
 }

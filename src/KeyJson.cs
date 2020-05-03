@@ -186,5 +186,31 @@ namespace KVL
 
             _ = await cmd.ExecuteNonQueryAsync();
         }
+
+        private static string FromComparison(Compare comparison) =>
+        comparison switch {
+            Compare.EQ => "==",
+            Compare.NE => "<>",
+            Compare.GE => ">=",
+            Compare.LE => "<=",
+            Compare.GT => ">",
+            Compare.LT => "<",
+            _ => throw new ArgumentException("Invalid enum value", nameof(comparison))
+        };
+
+        public async Task<long> Count<T>(string path, Compare comparison, T value)
+        {
+            var comp = FromComparison(comparison);
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = $@"
+                SELECT count() FROM {nameof(keyvaluestore)}
+                WHERE json_extract({keyvaluestore.value}, @path) {comp} @value 
+                ";
+
+            cmd.Parameters.AddWithValue("path", path);
+            cmd.Parameters.AddWithValue("value", value);
+
+            return (long) await cmd.ExecuteScalarAsync();
+        }
     }
 }

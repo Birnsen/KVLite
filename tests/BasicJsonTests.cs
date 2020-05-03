@@ -238,5 +238,46 @@ namespace KVL.Tests
             var expected = JsonSerializer.Serialize(new {hello = "value", world = "value"});
             Assert.AreEqual(expected, res);
         }
+
+
+        [TestMethod]
+        public async Task TestCount()
+        {
+            var kvl = KVLite.CreateJsonInMemory();
+            var value = JsonSerializer.Serialize(new {hello = "value"});
+
+            for(var i = 0; i < 1000; i++)
+            {
+                var key = Encoding.UTF8.GetBytes($"key{i}");
+                await kvl.Add(key, value);
+            }
+
+            var count = await kvl.Count();
+
+            Assert.AreEqual(1000, count);
+        }
+
+        [DataTestMethod]
+        [DataRow(Compare.EQ, 1)]
+        [DataRow(Compare.NE, 999)]
+        [DataRow(Compare.GE, 500)]
+        [DataRow(Compare.GT, 499)]
+        [DataRow(Compare.LE, 501)]
+        [DataRow(Compare.LT, 500)]
+        public async Task TestCountWithComparison(Compare comp, int expected)
+        {
+            var kvl = KVLite.CreateJsonInMemory();
+
+            for(var i = 0; i < 1000; i++)
+            {
+                var key = Encoding.UTF8.GetBytes($"key{i}");
+                var value = JsonSerializer.Serialize(new {hello = i });
+                await kvl.Add(key, value);
+            }
+
+            var count = await kvl.Count("$.hello", comp, 500);
+
+            Assert.AreEqual(expected, count);
+        }
     }
 }

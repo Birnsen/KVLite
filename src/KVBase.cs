@@ -126,6 +126,16 @@ namespace KVL
             trx.Commit();
         }
 
+        public async Task<long> Count()
+        {
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = $@"
+                SELECT count() FROM {nameof(keyvaluestore)} 
+                ";
+
+            return (long) await cmd.ExecuteScalarAsync();
+        }
+
         public async Task<Option<T>> Get(byte[] key)
         {
             using var cmd = _connection.CreateCommand();
