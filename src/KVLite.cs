@@ -212,7 +212,7 @@ namespace KVL
             await ((JsonApi) _connections[id]).Set(key, path, jsonToSet);
         }
 
-        public async Task Remove(byte[] key, params string[] path)
+        public async Task Remove(byte[] key, string path)
         {
             var id = FNVHash.Hash(key, HASHTABLE_SIZE);
             await ((JsonApi) _connections[id]).Remove(key, path);

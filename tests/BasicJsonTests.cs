@@ -239,6 +239,20 @@ namespace KVL.Tests
             Assert.AreEqual(expected, res);
         }
 
+        [TestMethod]
+        public async Task TestRemove()
+        {
+            var kvl = KVLite.CreateJsonInMemory();
+            var key = Encoding.UTF8.GetBytes("key");
+            var value = JsonSerializer.Serialize(new {hello = "value", world = "value"});
+
+            await kvl.Add(key, value);
+            await kvl.Remove(key, "$.world");
+            var res = await kvl.Get(key);
+
+            var expected = JsonSerializer.Serialize(new {hello = "value"});
+            Assert.AreEqual(expected, res);
+        }
 
         [TestMethod]
         public async Task TestCount()

@@ -27,7 +27,7 @@ namespace KVL
         Task Insert<T>(byte[] key, string path, T jsonToInsert);
         Task Replace<T>(byte[] key, string path, T jsonToReplace);
         Task Set<T>(byte[] key, string path, T jsonToSet);
-        Task Remove(byte[] key, params string[] path);
+        Task Remove(byte[] key, string path);
         Task<long> Count<T>(string path, Compare comparison, T value);
     }
 

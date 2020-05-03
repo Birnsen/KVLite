@@ -16,44 +16,51 @@ namespace KVL.Tests
         {
             var kvl = KVLite.CreateJsonInMemory();
 
-            Parallel.ForEach(Enumerable.Range(0, 100), async x => {
+            var run = Enumerable.Range(0, 10)
+                .Select(x => lifecycle(kvl, x));
 
-                for(var i = 0; i < 1000; i++)
-                {
-                    var key = Encoding.UTF8.GetBytes($"key-{x}-{i}");
-                    var value = JsonSerializer.Serialize(new {hello = "value"});
-                    await kvl.Add(key, value);
-                }
-
-                for(var i = 0; i < 1000; i++)
-                {
-                    var key = Encoding.UTF8.GetBytes($"key-{x}-{i}");
-                    await kvl.Insert(key, "$.world", "value");
-                }
-
-                for(var i = 0; i < 1000; i++)
-                {
-                    var key = Encoding.UTF8.GetBytes($"key-{x}-{i}");
-                    await kvl.Insert(key, "$.world", "value");
-                    var res = await kvl.Get(key);
-
-                    var expected = JsonSerializer.Serialize(new {hello = "value", world = "value"});
-                    Assert.AreEqual(expected, res);
-                }
-
-                for(var i = 0; i < 1000; i++)
-                {
-                    var key = Encoding.UTF8.GetBytes($"key-{x}-{i}");
-                    await kvl.Delete(key);
-                    var res = await kvl.Get(key);
-                    Assert.IsTrue(res.IsNone);
-                }
-            });
+            await Task.WhenAll(run);
 
             var count = await kvl.Get().CountAsync();
 
             Assert.AreEqual(0, count);
 
+        }
+
+        private async Task lifecycle(KJApi<string> kvl, int x)
+        {
+            var jsonStringValue = JsonSerializer.Serialize("value");
+        
+            for(var i = 0; i < 1000; i++)
+            {
+                var key = Encoding.UTF8.GetBytes($"key-{x}-{i}");
+                var value = JsonSerializer.Serialize(new {hello = "value"});
+                await kvl.Add(key, value);
+            }
+
+            for(var i = 0; i < 1000; i++)
+            {
+                var key = Encoding.UTF8.GetBytes($"key-{x}-{i}");
+                await kvl.Insert(key, "$.world", jsonStringValue);
+            }
+
+            for(var i = 0; i < 1000; i++)
+            {
+                var key = Encoding.UTF8.GetBytes($"key-{x}-{i}");
+                await kvl.Insert(key, "$.world", jsonStringValue);
+                var res = await kvl.Get(key);
+
+                var expected = JsonSerializer.Serialize(new {hello = "value", world = "value"});
+                Assert.AreEqual(expected, res);
+            }
+
+            for(var i = 0; i < 1000; i++)
+            {
+                var key = Encoding.UTF8.GetBytes($"key-{x}-{i}");
+                await kvl.Delete(key);
+                var res = await kvl.Get(key);
+                Assert.IsTrue(res.IsNone);
+            }
         }
     }
 }

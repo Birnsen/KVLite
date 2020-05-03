@@ -169,20 +169,20 @@ namespace KVL
             _ = await cmd.ExecuteNonQueryAsync();
         }
 
-        public async Task Remove(byte[] key, params string[] path)
+        public async Task Remove(byte[] key, string path)
         {
             using var cmd = _connection.CreateCommand();
             cmd.CommandText = $@"
                 UPDATE {nameof(keyvaluestore)} 
                 SET {keyvaluestore.value} = (
-                    SELECT json_remove({keyvaluestore.value}, @path, @value)
+                    SELECT json_remove({keyvaluestore.value}, @path)
                     FROM {nameof(keyvaluestore)}
                     WHERE key = @key)
                 WHERE {keyvaluestore.key} = @key
                 ";
 
             cmd.Parameters.AddWithValue("key", key);
-            cmd.Parameters.AddWithValue("path", string.Join(",", path));
+            cmd.Parameters.AddWithValue("path", path);
 
             _ = await cmd.ExecuteNonQueryAsync();
         }
