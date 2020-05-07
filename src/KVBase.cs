@@ -48,7 +48,7 @@ namespace KVL
             {
                 await Add(e.Key, e.Value);
             }
-            trx.Commit();
+            await trx.CommitAsync();
         }
 
 
@@ -75,7 +75,7 @@ namespace KVL
             {
                 await Upsert(e.Key, e.Value);
             }
-            trx.Commit();
+            await trx.CommitAsync();
         }
 
         public virtual async Task Update(byte[] key, T value)
@@ -100,7 +100,7 @@ namespace KVL
             {
                 await Update(e.Key, e.Value);
             }
-            trx.Commit();
+            await trx.CommitAsync();
         }
 
         public async Task Delete(byte[] key)
@@ -123,7 +123,7 @@ namespace KVL
             {
                 await Delete(k);
             }
-            trx.Commit();
+            await trx.CommitAsync();
         }
 
         public async Task<long> Count()

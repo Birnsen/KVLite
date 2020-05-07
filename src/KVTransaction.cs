@@ -8,25 +8,45 @@ using System.Threading.Tasks;
 
 namespace KVL
 {
-    public class KVTransaction : IDisposable, IAsyncDisposable
+    public class KVTransaction : IDisposable
     {
         private DbTransaction _transaction;
         private bool disposedValue;
+        private readonly SemaphoreSlim _transactionSemaphore;
 
-        private KVTransaction(DbTransaction transaction) 
+        private KVTransaction(DbTransaction transaction, SemaphoreSlim trxSemaphore) 
         {
             _transaction = transaction;
+            _transactionSemaphore = trxSemaphore;
         }
 
-        public static async Task<KVTransaction> BeginTransactionAsync(SQLiteConnection connection)
+        public static async Task<KVTransaction> BeginTransactionAsync(SQLiteConnection connection, SemaphoreSlim trxSemaphore)
         {
-            var transaction = await connection.BeginTransactionAsync();
-            return new KVTransaction(transaction);
+            try
+            {
+                var transaction = await connection.BeginTransactionAsync();
+                return new KVTransaction(transaction, trxSemaphore);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"{ex}");
+                trxSemaphore.Release();
+                throw;
+            }
         }
 
-        public static KVTransaction BeginTransaction(SQLiteConnection connection)
+        public static KVTransaction BeginTransaction(SQLiteConnection connection, SemaphoreSlim trxSemaphore)
         {
-            return new KVTransaction(connection.BeginTransaction());
+            try
+            {
+                trxSemaphore.Wait();
+                return new KVTransaction(connection.BeginTransaction(), trxSemaphore);
+            }
+            catch(Exception)
+            {
+                trxSemaphore.Release();
+                throw;
+            }
         }
 
         public void Commit()
@@ -34,9 +54,9 @@ namespace KVL
             _transaction.Commit();
         }
 
-        public Task CommitAsync(CancellationToken cancellationToken = default(CancellationToken))
+        public async Task CommitAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            return _transaction.CommitAsync(cancellationToken);
+            await _transaction.CommitAsync(cancellationToken);
         }
 
         public void Rollback()
@@ -44,14 +64,9 @@ namespace KVL
             _transaction.Rollback();
         }
 
-        public Task RollbackAsync(CancellationToken cancellationToken = default(CancellationToken))
+        public async Task RollbackAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            return _transaction.RollbackAsync(cancellationToken);
-        }
-
-        public ValueTask DisposeAsync()
-        {
-            return _transaction.DisposeAsync();
+            await _transaction.RollbackAsync(cancellationToken);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -61,6 +76,7 @@ namespace KVL
                 if (disposing)
                 {
                     _transaction.Dispose();
+                    _transactionSemaphore.Release();
                 }
 
                 disposedValue= true;

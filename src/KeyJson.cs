@@ -5,11 +5,14 @@ using System.Data.SQLite;
 using System.IO;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace KVL
 {
     internal class KeyJson : KVBase<string>, JsonApi
     {
+        private readonly SemaphoreSlim _transactionSemaphore = new SemaphoreSlim(1, 1);
+
         public static KeyJson CreateWithFileInfo(FileInfo file)
         {
             return new KeyJson(file.FullName);
@@ -57,12 +60,13 @@ namespace KVL
 
         public KVTransaction BeginTransaction(byte[] _)
         {
-            return KVTransaction.BeginTransaction(_connection);
+            return KVTransaction.BeginTransaction(_connection, _transactionSemaphore);
         }
 
         public async Task<KVTransaction> BeginTransactionAsync(byte[] _)
         {
-            return await KVTransaction.BeginTransactionAsync(_connection);
+            await _transactionSemaphore.WaitAsync();
+            return await KVTransaction.BeginTransactionAsync(_connection, _transactionSemaphore);
         }
         
         public override async Task Add(byte[] key, string value)
