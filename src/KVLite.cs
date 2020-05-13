@@ -228,6 +228,17 @@ namespace KVL
             }
         }
 
+        public async IAsyncEnumerable<KeyValuePair<byte[], T>> Get<T, S>(string path, Compare comparison, S value)
+        {
+            foreach(var c in _connections)
+            {
+                await foreach(var kv in ((JsonApi) c).Get<T, S>(path, comparison, value))
+                {
+                    yield return kv;
+                }
+            }
+        }
+
         public async Task Insert<S>(byte[] key, string path, S jsonToInsert)
         {
             var id = FNVHash.Hash(key, HASHTABLE_SIZE);

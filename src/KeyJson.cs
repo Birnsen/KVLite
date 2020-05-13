@@ -30,11 +30,11 @@ namespace KVL
             var extPath = "./runtimes/{0}/native/netstandard2.0/SQLite.Interop.dll";
             var system = "linux-x64";
 
-            if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 system = "osx-x64";
             }
-            else if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 system = RuntimeInformation.OSArchitecture == Architecture.X64
                     ? "win-x64"
@@ -68,7 +68,7 @@ namespace KVL
             await _transactionSemaphore.WaitAsync();
             return await KVTransaction.BeginTransactionAsync(_connection, _transactionSemaphore);
         }
-        
+
         public override async Task Add(byte[] key, string value)
         {
             using var cmd = _connection.CreateCommand();
@@ -132,7 +132,7 @@ namespace KVL
             cmd.Parameters.AddWithValue("path", path);
             cmd.Parameters.AddWithValue("value", jsonToInsert);
 
-            _ = await cmd.ExecuteNonQueryAsync();        
+            _ = await cmd.ExecuteNonQueryAsync();
         }
 
         public async Task Replace<T>(byte[] key, string path, T jsonToReplace)
@@ -214,7 +214,53 @@ namespace KVL
             cmd.Parameters.AddWithValue("path", path);
             cmd.Parameters.AddWithValue("value", value);
 
-            return (long) await cmd.ExecuteScalarAsync();
+            return (long)await cmd.ExecuteScalarAsync();
+        }
+
+        public async IAsyncEnumerable<KeyValuePair<byte[], T>> Get<T, S>(string path, Compare comparison, S value)
+        {
+            var pageCounter = 0;
+            var entryCounter = 0;
+            do
+            {
+                entryCounter = 0;
+                await foreach (var kv in get<T, S>(pageCounter * 512, 512, path, comparison, value))
+                {
+                    entryCounter++;
+                    yield return kv;
+                }
+
+                pageCounter++;
+            } while (entryCounter > 0);
+        }
+
+        private async IAsyncEnumerable<KeyValuePair<byte[], T>> get<T, S>(long page, int maxSize, string path, Compare comparison, S value)
+        {
+            //Propably faster then LIMIT/OFFSET as per: http://blog.ssokolow.com/archives/2009/12/23/sql-pagination-without-offset/
+            var comp = FromComparison(comparison);
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = $@"
+                SELECT * FROM {nameof(keyvaluestore)} 
+                WHERE json_extract({keyvaluestore.value}, @path) {comp} @value 
+                AND rowid NOT IN (
+                    SELECT rowid FROM {nameof(keyvaluestore)}
+                    ORDER BY rowid ASC LIMIT {page} 
+                )
+                ORDER BY rowid ASC LIMIT {maxSize}
+                ";
+
+            cmd.Parameters.AddWithValue("path", path);
+            cmd.Parameters.AddWithValue("value", value);
+
+            var reader = await cmd.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                var key = (byte[])reader.GetValue(1);
+                var retValue = (T)reader.GetValue(2);
+
+                yield return new KeyValuePair<byte[], T>(key, retValue);
+            }
         }
     }
 }
