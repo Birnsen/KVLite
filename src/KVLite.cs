@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System;
 using LanguageExt;
+using System.Threading;
 
 namespace KVL
 {
@@ -35,6 +36,7 @@ namespace KVL
     {
         private const uint HASHTABLE_SIZE = 128;
         private readonly KVApi<T>[] _connections;
+        private readonly SemaphoreSlim _bulkSemaphore = new SemaphoreSlim(1, 1);
 
         internal KVLite()
         {
@@ -97,14 +99,22 @@ namespace KVL
 
         public async Task Add(IEnumerable<KeyValuePair<byte[], T>> entries)
         {
-            var tasks = entries
-                .GroupBy(kvp => FNVHash.Hash(kvp.Key, HASHTABLE_SIZE))
-                .Select(group => Task.Run(async delegate 
-                {
-                    await _connections[group.Key].Add(group);
-                }));
+            try
+            {
+                await _bulkSemaphore.WaitAsync();
+                var tasks = entries
+                    .GroupBy(kvp => FNVHash.Hash(kvp.Key, HASHTABLE_SIZE))
+                    .Select(group => Task.Run(async delegate
+                    {
+                        await _connections[group.Key].Add(group);
+                    }));
 
-            await Task.WhenAll(tasks);
+                await Task.WhenAll(tasks);
+            }
+            finally
+            {
+                _bulkSemaphore.Release();
+            }
         }
 
         public async Task Upsert(byte[] key, T value)
@@ -115,14 +125,22 @@ namespace KVL
 
         public async Task Upsert(IEnumerable<KeyValuePair<byte[], T>> entries)
         {
-            var tasks = entries
-                .GroupBy(kvp => FNVHash.Hash(kvp.Key, HASHTABLE_SIZE))
-                .Select(group => Task.Run(async delegate
-                {
-                    await _connections[group.Key].Upsert(group);
-                }));
+            try
+            {
+                await _bulkSemaphore.WaitAsync();
+                var tasks = entries
+                    .GroupBy(kvp => FNVHash.Hash(kvp.Key, HASHTABLE_SIZE))
+                    .Select(group => Task.Run(async delegate
+                    {
+                        await _connections[group.Key].Upsert(group);
+                    }));
 
-            await Task.WhenAll(tasks);
+                await Task.WhenAll(tasks);
+            }
+            finally
+            {
+                _bulkSemaphore.Release();
+            }
         }
 
         public async Task Update(byte[] key, T value)
@@ -133,14 +151,22 @@ namespace KVL
         
         public async Task Update(IEnumerable<KeyValuePair<byte[], T>> entries)
         {
-            var tasks = entries
-                .GroupBy(kvp => FNVHash.Hash(kvp.Key, HASHTABLE_SIZE))
-                .Select(group => Task.Run(async delegate 
-                {
-                    await _connections[group.Key].Update(group);
-                }));
+            try
+            {
+                await _bulkSemaphore.WaitAsync();
+                var tasks = entries
+                    .GroupBy(kvp => FNVHash.Hash(kvp.Key, HASHTABLE_SIZE))
+                    .Select(group => Task.Run(async delegate
+                    {
+                        await _connections[group.Key].Update(group);
+                    }));
 
-            await Task.WhenAll(tasks);
+                await Task.WhenAll(tasks);
+            }
+            finally
+            {
+                _bulkSemaphore.Release();
+            }
         }
 
         public async Task Delete(byte[] key)
@@ -151,14 +177,22 @@ namespace KVL
 
         public async Task Delete(IEnumerable<byte[]> keys)
         {
-            var tasks = keys
-                .GroupBy(key => FNVHash.Hash(key, HASHTABLE_SIZE))
-                .Select(group => Task.Run(async delegate 
-                {
-                    await _connections[group.Key].Delete(group);
-                }));
+            try
+            {
+                await _bulkSemaphore.WaitAsync();
+                var tasks = keys
+                    .GroupBy(key => FNVHash.Hash(key, HASHTABLE_SIZE))
+                    .Select(group => Task.Run(async delegate
+                    {
+                        await _connections[group.Key].Delete(group);
+                    }));
 
-            await Task.WhenAll(tasks);
+                await Task.WhenAll(tasks);
+            }
+            finally
+            {
+                _bulkSemaphore.Release();
+            }
         }
 
         public async Task<long> Count()
@@ -188,6 +222,17 @@ namespace KVL
             foreach(var c in _connections)
             {
                 await foreach(var kv in c.Get())
+                {
+                    yield return kv;
+                }
+            }
+        }
+
+        public async IAsyncEnumerable<KeyValuePair<byte[], T>> Get<T, S>(string path, Compare comparison, S value)
+        {
+            foreach(var c in _connections)
+            {
+                await foreach(var kv in ((JsonApi) c).Get<T, S>(path, comparison, value))
                 {
                     yield return kv;
                 }

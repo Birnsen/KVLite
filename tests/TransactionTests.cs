@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Text.Json;
+using System.Linq;
 
 namespace KVL.Tests
 {
@@ -84,6 +85,81 @@ namespace KVL.Tests
             
             var res = await kvl.Get(key);
             Assert.AreEqual(value, res);
+        }
+
+        [TestMethod]
+        public async Task TestMultiThreadedTransactionOnSameKey()
+        {
+            var kvl = KVLite.CreateJsonInMemory();
+            var key = Encoding.UTF8.GetBytes("key");
+            var value = JsonSerializer.Serialize(new {hello = "value"});
+            var arrayValues = Enumerable.Range(0, 100);
+
+            await kvl.Add(key, value);
+
+            var tasks = arrayValues
+                .Select(trxFunc);
+
+            await Task.WhenAll(tasks);
+            
+            var res = await kvl.Get(key);
+            var element = JsonDocument.Parse(res.Head()).RootElement;
+            var prop = element
+                .EnumerateObject()
+                .Find(x => x.Name == "world").Head();
+            var values = arrayValues.ToHashSet();
+            foreach(var i in prop.Value.EnumerateArray())
+            {
+                values.Remove(i.GetInt32());
+            }
+
+            Assert.AreEqual(0, values.Count);
+
+            async Task trxFunc(int i)
+            {
+                using var trx = await kvl.BeginTransactionAsync(key);
+                await kvl.Insert(key, "$.world", "[]");
+                await kvl.Insert(key, "$.world[#]", i);
+                await trx.CommitAsync();
+            }
+        }
+
+        [TestMethod]
+        public async Task TestMultiThreadedTransactionOnSameKeyOneThrows()
+        {
+            var kvl = KVLite.CreateJsonInMemory();
+            var key = Encoding.UTF8.GetBytes("key");
+            var value = JsonSerializer.Serialize(new {hello = "value"});
+            var arrayValues = Enumerable.Range(0, 100);
+
+            await kvl.Add(key, value);
+
+            var tasks = arrayValues
+                .Select(trxFunc);
+
+            var t = await Assert.ThrowsExceptionAsync<Exception>(() => Task.WhenAll(tasks));
+            
+            var res = await kvl.Get(key);
+            var element = JsonDocument.Parse(res.Head()).RootElement;
+            var prop = element
+                .EnumerateObject()
+                .Find(x => x.Name == "world").Head();
+            var values = arrayValues.ToHashSet();
+            foreach(var i in prop.Value.EnumerateArray())
+            {
+                values.Remove(i.GetInt32());
+            }
+
+            Assert.AreEqual(1, values.Count);
+
+            async Task trxFunc(int i)
+            {
+                if (i == 50) throw new Exception("Boom");
+                using var trx = await kvl.BeginTransactionAsync(key);
+                await kvl.Insert(key, "$.world", "[]");
+                await kvl.Insert(key, "$.world[#]", i);
+                await trx.CommitAsync();
+            }
         }
     }
 }

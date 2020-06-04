@@ -29,6 +29,7 @@ namespace KVL
         Task Set<T>(byte[] key, string path, T jsonToSet);
         Task Remove(byte[] key, string path);
         Task<long> Count<T>(string path, Compare comparison, T value);
+        IAsyncEnumerable<KeyValuePair<byte[], T>> Get<T, S>(string path, Compare comparison, S value);
     }
 
     public enum Compare
