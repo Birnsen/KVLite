@@ -27,7 +27,7 @@ namespace KVL.Tests
         public async Task TestGetAll()
         {
             var kvl = KVLite.CreateInMemory();
-            var entryCount = 1024;
+            var entryCount = 1024000;
 
             var entries = Enumerable
                 .Range(0, entryCount)
@@ -80,12 +80,14 @@ namespace KVL.Tests
         }
 
         [DataTestMethod]
-        [DataRow(128, false)]
+        /*[DataRow(128, false)]
         [DataRow(128, true)]
         [DataRow(1024, false)]
         [DataRow(1024, true)]
         [DataRow(10240, false)]
-        [DataRow(10240, true)]
+        [DataRow(10240, true)]//*/
+        [DataRow(61504, false)]
+        [DataRow(1024000, true)]
         public async Task TestGetByComparison(int entryCount, bool random)
         {
             var kvl = KVLite.CreateJsonInMemory();

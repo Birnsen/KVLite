@@ -219,34 +219,21 @@ namespace KVL
 
         public async IAsyncEnumerable<KeyValuePair<byte[], T>> Get<T, S>(string path, Compare comparison, S value)
         {
-            var pageCounter = 0;
-            var entryCounter = 0;
-            do
+            await foreach (var kv in get<T, S>( path, comparison, value))
             {
-                entryCounter = 0;
-                await foreach (var kv in get<T, S>(pageCounter * 512, 512, path, comparison, value))
-                {
-                    entryCounter++;
-                    yield return kv;
-                }
+                yield return kv;
+            }
 
-                pageCounter++;
-            } while (entryCounter > 0);
         }
 
-        private async IAsyncEnumerable<KeyValuePair<byte[], T>> get<T, S>(long page, int maxSize, string path, Compare comparison, S value)
+        private async IAsyncEnumerable<KeyValuePair<byte[], T>> get<T, S>(string path, Compare comparison, S value)
         {
             //Propably faster then LIMIT/OFFSET as per: http://blog.ssokolow.com/archives/2009/12/23/sql-pagination-without-offset/
             var comp = FromComparison(comparison);
             using var cmd = _connection.CreateCommand();
             cmd.CommandText = $@"
                 SELECT * FROM {nameof(keyvaluestore)} 
-                WHERE json_extract({keyvaluestore.value}, @path) {comp} @value 
-                AND rowid NOT IN (
-                    SELECT rowid FROM {nameof(keyvaluestore)}
-                    ORDER BY rowid ASC LIMIT {page} 
-                )
-                ORDER BY rowid ASC LIMIT {maxSize}
+                WHERE json_extract({keyvaluestore.value}, @path) {comp} @value
                 ";
 
             cmd.Parameters.AddWithValue("path", path);
