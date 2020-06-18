@@ -17,7 +17,7 @@ namespace KVL
         Task Delete(IEnumerable<byte[]> keys);
         Task<long> Count();
         Task<Option<T>> Get(byte[] key);
-        IAsyncEnumerable<KeyValuePair<byte[], T>> Get();
+        IAsyncEnumerable<KeyValuePair<byte[], T>> Get(bool truncateWal = false);
     }
 
     public interface JsonApi

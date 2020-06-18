@@ -152,7 +152,7 @@ namespace KVL
             return ret != null ? Some((T) ret) : None;
         }
 
-        public async IAsyncEnumerable<KeyValuePair<byte[], T>> Get()
+        public async IAsyncEnumerable<KeyValuePair<byte[], T>> Get(bool truncateWal = false)
         {
             var pageCounter = 0;
             var entryCounter = 0;
@@ -167,6 +167,16 @@ namespace KVL
 
                 pageCounter++;
             } while(entryCounter > 0);
+
+            if (truncateWal) await executeWalTruncate();
+        }
+
+        private async Task executeWalTruncate()
+        {
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = $@"PRAGMA wal_checkpoint(TRUNCATE);";
+
+            var _ = await cmd.ExecuteScalarAsync();
         }
 
         private async IAsyncEnumerable<KeyValuePair<byte[], T>> get(long page, int maxSize)

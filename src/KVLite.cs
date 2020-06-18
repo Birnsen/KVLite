@@ -217,11 +217,11 @@ namespace KVL
             return await _connections[id].Get(key);
         }
 
-        public async IAsyncEnumerable<KeyValuePair<byte[], T>> Get()
+        public async IAsyncEnumerable<KeyValuePair<byte[], T>> Get(bool truncateWal = false)
         {
             foreach(var c in _connections)
             {
-                await foreach(var kv in c.Get())
+                await foreach(var kv in c.Get(truncateWal))
                 {
                     yield return kv;
                 }
