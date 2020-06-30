@@ -28,7 +28,7 @@ namespace KVL
         {
             _connection.EnableExtensions(true);
 
-            var extPath = Path.Combine(Assembly.GetEntryAssembly().Location, "SQLite.Interop.dll");
+            var extPath = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "SQLite.Interop.dll");
 
             if (!File.Exists(extPath))
             {
@@ -42,7 +42,7 @@ namespace KVL
 
         private static string tryFindExtensionPath()
         {
-            string extPath = "./runtimes/{0}/native/netstandard2.0/SQLite.Interop.dll";
+            var extPath = "./runtimes/{0}/native/netstandard2.0/SQLite.Interop.dll";
             var system = "linux-x64";
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
