@@ -20,7 +20,7 @@ namespace KVL
                 JournalMode = SQLiteJournalModeEnum.Wal,
                 Version = 3
             };
-            
+
             _connection = new SQLiteConnection(builder.ToString());
             _connection.Open();
         }
@@ -44,7 +44,7 @@ namespace KVL
         public async Task Add(IEnumerable<KeyValuePair<byte[], T>> entries)
         {
             using var trx = _connection.BeginTransaction();
-            foreach(var e in entries)
+            foreach (var e in entries)
             {
                 await Add(e.Key, e.Value);
             }
@@ -96,7 +96,7 @@ namespace KVL
         public async Task Update(IEnumerable<KeyValuePair<byte[], T>> entries)
         {
             using var trx = _connection.BeginTransaction();
-            foreach(var e in entries)
+            foreach (var e in entries)
             {
                 await Update(e.Key, e.Value);
             }
@@ -119,7 +119,7 @@ namespace KVL
         public async Task Delete(IEnumerable<byte[]> keys)
         {
             using var trx = _connection.BeginTransaction();
-            foreach(var k in keys)
+            foreach (var k in keys)
             {
                 await Delete(k);
             }
@@ -133,7 +133,7 @@ namespace KVL
                 SELECT count() FROM {nameof(keyvaluestore)} 
                 ";
 
-            return (long) await cmd.ExecuteScalarAsync();
+            return (long)await cmd.ExecuteScalarAsync();
         }
 
         public async Task<Option<T>> Get(byte[] key)
@@ -147,26 +147,17 @@ namespace KVL
             cmd.Parameters.AddWithValue("key", key);
             var ret = await cmd.ExecuteScalarAsync();
 
-            
 
-            return ret != null ? Some((T) ret) : None;
+
+            return ret != null ? Some((T)ret) : None;
         }
 
         public async IAsyncEnumerable<KeyValuePair<byte[], T>> Get(bool truncateWal = false)
         {
-            var pageCounter = 0;
-            var entryCounter = 0;
-            do
+            await foreach (var kv in get())
             {
-                entryCounter = 0;
-                await foreach(var kv in get(pageCounter * 512, 512))
-                {
-                    entryCounter++;
-                    yield return kv;
-                }   
-
-                pageCounter++;
-            } while(entryCounter > 0);
+                yield return kv;
+            }
 
             if (truncateWal) await executeWalTruncate();
         }
@@ -179,23 +170,14 @@ namespace KVL
             var _ = await cmd.ExecuteScalarAsync();
         }
 
-        private async IAsyncEnumerable<KeyValuePair<byte[], T>> get(long page, int maxSize)
+        private async IAsyncEnumerable<KeyValuePair<byte[], T>> get()
         {
-            //Propably faster then LIMIT/OFFSET as per: http://blog.ssokolow.com/archives/2009/12/23/sql-pagination-without-offset/
-            //TODO Benchmark
             using var cmd = _connection.CreateCommand();
-            cmd.CommandText = $@"
-                SELECT * FROM {nameof(keyvaluestore)} 
-                WHERE rowid NOT IN (
-                    SELECT rowid FROM {nameof(keyvaluestore)}
-                    ORDER BY rowid ASC LIMIT {page} 
-                )
-                ORDER BY rowid ASC LIMIT {maxSize}
-                ";
+            cmd.CommandText = $@"SELECT * FROM {nameof(keyvaluestore)}";
 
             var reader = await cmd.ExecuteReaderAsync();
 
-            while(await reader.ReadAsync())
+            while (await reader.ReadAsync())
             {
                 var key = (byte[])reader.GetValue(1);
                 var value = (T)reader.GetValue(2);
