@@ -217,14 +217,38 @@ namespace KVL
             return await _connections[id].Get(key);
         }
 
+        public async IAsyncEnumerable<KeyValuePair<byte[], T>> GetRR(bool truncateWal = false)
+        {
+            var con = _connections.Select((c, i) => (i, c.GetRR().GetAsyncEnumerator())).ToDictionary(kv => kv.i, kv => kv.Item2);
+            var id = 0;
+            do
+            {
+                var i = Math.Abs(id % (int)HASHTABLE_SIZE);
+                if(con.ContainsKey(i) && await con[i].MoveNextAsync())
+                {
+                    yield return con[i].Current;
+                }
+                else 
+                {
+                    con.Remove(i);
+                }
+
+                ++id;
+            }
+            while (con.Any());
+        }
+
+
         public async IAsyncEnumerable<KeyValuePair<byte[], T>> Get(bool truncateWal = false)
         {
+            var counter = 0;
             foreach(var c in _connections)
             {
                 await foreach(var kv in c.Get(truncateWal))
                 {
                     yield return kv;
                 }
+                ++counter;
             }
         }
 
@@ -237,6 +261,27 @@ namespace KVL
                     yield return kv;
                 }
             }
+        }
+
+        public async IAsyncEnumerable<KeyValuePair<byte[], T>> GetRR<T, S>(string path, Compare comparison, S value)
+        {
+            var con = _connections.Select((c, i) => (i, ((JsonApi)c).GetRR<T, S>(path, comparison, value).GetAsyncEnumerator())).ToDictionary(kv => kv.i, kv => kv.Item2);
+            var id = 0;
+            do
+            {
+                var i = Math.Abs(id % (int)HASHTABLE_SIZE);
+                if (con.ContainsKey(i) && await con[i].MoveNextAsync())
+                {
+                    yield return con[i].Current;
+                }
+                else
+                {
+                    con.Remove(i);
+                }
+
+                ++id;
+            }
+            while (con.Any());
         }
 
         public async Task Insert<S>(byte[] key, string path, S jsonToInsert)

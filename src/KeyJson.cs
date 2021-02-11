@@ -32,7 +32,11 @@ namespace KVL
 
             if (!File.Exists(extPath))
             {
-                extPath = tryFindExtensionPath();
+                extPath = tryFindExtensionPath("./runtimes/{0}/native/netstandard2.0/SQLite.Interop.dll");
+                if (!File.Exists(extPath))
+                {
+                    extPath = tryFindExtensionPath("./runtimes/{0}/native/SQLite.Interop.dll");
+                }
             }
 
             _connection.LoadExtension(extPath, "sqlite3_json_init");
@@ -40,9 +44,8 @@ namespace KVL
             createTable();
         }
 
-        private static string tryFindExtensionPath()
+        private static string tryFindExtensionPath(string extPath)
         {
-            var extPath = "./runtimes/{0}/native/netstandard2.0/SQLite.Interop.dll";
             var system = "linux-x64";
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -205,7 +208,8 @@ namespace KVL
         }
 
         private static string FromComparison(Compare comparison) =>
-        comparison switch {
+        comparison switch
+        {
             Compare.EQ => "==",
             Compare.NE => "<>",
             Compare.GE => ">=",
@@ -232,7 +236,16 @@ namespace KVL
 
         public async IAsyncEnumerable<KeyValuePair<byte[], T>> Get<T, S>(string path, Compare comparison, S value)
         {
-            await foreach (var kv in get<T, S>( path, comparison, value))
+            await foreach (var kv in get<T, S>(path, comparison, value))
+            {
+                yield return kv;
+            }
+
+        }
+
+        public async IAsyncEnumerable<KeyValuePair<byte[], T>> GetRR<T, S>(string path, Compare comparison, S value)
+        {
+            await foreach (var kv in get<T, S>(path, comparison, value))
             {
                 yield return kv;
             }

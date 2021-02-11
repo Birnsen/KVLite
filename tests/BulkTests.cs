@@ -96,5 +96,33 @@ namespace KVL.Tests
             }
 
         }
+
+        [TestMethod]
+        public async Task TestGetRR()
+        {
+            var kvl = KVLite.CreateInMemory();
+
+            var entries = Enumerable
+                .Range(0, 1000)
+                .Select(x => createKVP(x, "value"));
+
+            await kvl.Add(entries);
+
+            var keys = entries
+                .Select(x => Encoding.UTF8.GetString(x.Key))
+                .ToHashSet();
+            var counter = 0;
+            await foreach (var res in kvl.GetRR())
+            {
+                counter++;
+                var key = Encoding.UTF8.GetString(res.Key);
+                keys.Remove(key);
+
+                Assert.AreEqual("value", Encoding.UTF8.GetString(res.Value));
+            }
+
+            Assert.AreEqual(1000, counter);
+            Assert.AreEqual(0, keys.Count);
+        }
     }
 }

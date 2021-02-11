@@ -162,6 +162,16 @@ namespace KVL
             if (truncateWal) await executeWalTruncate();
         }
 
+        public async IAsyncEnumerable<KeyValuePair<byte[], T>> GetRR(bool truncateWal = false)
+        {
+            await foreach (var kv in get())
+            {
+                yield return kv;
+            }
+
+            if (truncateWal) await executeWalTruncate();
+        }
+
         private async Task executeWalTruncate()
         {
             using var cmd = _connection.CreateCommand();
