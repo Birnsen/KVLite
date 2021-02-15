@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System;
 using LanguageExt;
 using System.Threading;
+using MoreLinq;
 
 namespace KVL
 {
@@ -219,23 +220,30 @@ namespace KVL
 
         public async IAsyncEnumerable<KeyValuePair<byte[], T>> GetRR(bool truncateWal = false)
         {
-            var con = _connections.Select((c, i) => (i, c.GetRR().GetAsyncEnumerator())).ToDictionary(kv => kv.i, kv => kv.Item2);
+            var batchSize = (int)HASHTABLE_SIZE / 8;
+            var batch = _connections.Batch(batchSize);
             var id = 0;
-            do
+            foreach(var cons in batch)
             {
-                var i = Math.Abs(id % (int)HASHTABLE_SIZE);
-                if(con.ContainsKey(i) && await con[i].MoveNextAsync())
-                {
-                    yield return con[i].Current;
-                }
-                else 
-                {
-                    con.Remove(i);
-                }
+                var con = cons
+                    .Select((c, i) => (i, c.GetRR(truncateWal).GetAsyncEnumerator())).ToDictionary(kv => kv.i, kv => kv.Item2);
 
-                ++id;
+                do
+                {
+                    var i = Math.Abs(id % batchSize);
+                    if(con.ContainsKey(i) && await con[i].MoveNextAsync())
+                    {
+                        yield return con[i].Current;
+                    }
+                    else 
+                    {
+                        con.Remove(i);
+                    }
+
+                    ++id;
+                }
+                while (con.Any());
             }
-            while (con.Any());
         }
 
 
@@ -252,36 +260,51 @@ namespace KVL
             }
         }
 
-        public async IAsyncEnumerable<KeyValuePair<byte[], T>> Get<T, S>(string path, Compare comparison, S value)
+        public async IAsyncEnumerable<KeyValuePair<byte[], T>> Get<T, S>(string path, Compare comparison, S value, bool truncateWal = false)
         {
             foreach(var c in _connections)
             {
-                await foreach(var kv in ((JsonApi) c).Get<T, S>(path, comparison, value))
+                await foreach(var kv in ((JsonApi) c).Get<T, S>(path, comparison, value, truncateWal))
                 {
                     yield return kv;
                 }
             }
         }
 
-        public async IAsyncEnumerable<KeyValuePair<byte[], T>> GetRR<T, S>(string path, Compare comparison, S value)
+        public async IAsyncEnumerable<KeyValuePair<byte[], T>> GetRR<T, S>(string path, Compare comparison, S value, bool truncateWal = false)
         {
-            var con = _connections.Select((c, i) => (i, ((JsonApi)c).GetRR<T, S>(path, comparison, value).GetAsyncEnumerator())).ToDictionary(kv => kv.i, kv => kv.Item2);
-            var id = 0;
-            do
-            {
-                var i = Math.Abs(id % (int)HASHTABLE_SIZE);
-                if (con.ContainsKey(i) && await con[i].MoveNextAsync())
-                {
-                    yield return con[i].Current;
-                }
-                else
-                {
-                    con.Remove(i);
-                }
 
-                ++id;
+            var batchSize = (int)HASHTABLE_SIZE / 8;
+            var batch = _connections.Batch(batchSize);
+            var id = 0;
+            foreach (var cons in batch)
+            {
+                var con = cons
+                    .Select((c, i) => (i, ((JsonApi)c).GetRR<T, S>(path, comparison, value, truncateWal).GetAsyncEnumerator())).ToDictionary(kv => kv.i, kv => kv.Item2);
+                do
+                {
+                    var i = Math.Abs(id % batchSize);
+                    if (con.ContainsKey(i) && await con[i].MoveNextAsync())
+                    {
+                        yield return con[i].Current;
+                    }
+                    else
+                    {
+                        con.Remove(i);
+                    }
+
+                    ++id;
+                }
+                while (con.Any());
             }
-            while (con.Any());
+        }
+
+        public async Task Clean()
+        {
+            foreach(var c in _connections)
+            {
+                await c.Clean();
+            }
         }
 
         public async Task Insert<S>(byte[] key, string path, S jsonToInsert)

@@ -39,7 +39,7 @@ namespace KVL.Tests
                 .ToHashSet();
 
             var counter = 0;
-            await foreach (var res in kvl.Get())
+            await foreach (var res in kvl.Get(true))
             {
                 Interlocked.Increment(ref counter);
                 var key = Encoding.UTF8.GetString(res.Key);
@@ -66,7 +66,7 @@ namespace KVL.Tests
                 .Select(x => Encoding.UTF8.GetString(x.Key))
                 .ToHashSet();
 
-            await foreach (var k in kvl.Get().Batch(10).Take(2))
+            await foreach (var k in kvl.Get().BatchAsync(10).Take(2))
             {
                 await foreach (var res in k)
                 {

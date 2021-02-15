@@ -234,22 +234,24 @@ namespace KVL
             return (long)await cmd.ExecuteScalarAsync();
         }
 
-        public async IAsyncEnumerable<KeyValuePair<byte[], T>> Get<T, S>(string path, Compare comparison, S value)
+        public async IAsyncEnumerable<KeyValuePair<byte[], T>> Get<T, S>(string path, Compare comparison, S value, bool truncateWal = false)
         {
             await foreach (var kv in get<T, S>(path, comparison, value))
             {
                 yield return kv;
             }
 
+            if (truncateWal) await Clean();
         }
 
-        public async IAsyncEnumerable<KeyValuePair<byte[], T>> GetRR<T, S>(string path, Compare comparison, S value)
+        public async IAsyncEnumerable<KeyValuePair<byte[], T>> GetRR<T, S>(string path, Compare comparison, S value, bool truncateWal = false)
         {
             await foreach (var kv in get<T, S>(path, comparison, value))
             {
                 yield return kv;
             }
 
+            if (truncateWal) await Clean();
         }
 
         private async IAsyncEnumerable<KeyValuePair<byte[], T>> get<T, S>(string path, Compare comparison, S value)

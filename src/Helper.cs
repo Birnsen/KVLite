@@ -6,7 +6,7 @@ namespace KVL
     public static class Helper
     {
 
-        public static async IAsyncEnumerable<IAsyncEnumerable<T>> Batch<T>(this IAsyncEnumerable<T> source, int batch)
+        public static async IAsyncEnumerable<IAsyncEnumerable<T>> BatchAsync<T>(this IAsyncEnumerable<T> source, int batch)
         {
             var nextBatch = new List<T>(batch);
             await foreach(var item in source)

@@ -159,7 +159,7 @@ namespace KVL
                 yield return kv;
             }
 
-            if (truncateWal) await executeWalTruncate();
+            if (truncateWal) await Clean();
         }
 
         public async IAsyncEnumerable<KeyValuePair<byte[], T>> GetRR(bool truncateWal = false)
@@ -169,10 +169,10 @@ namespace KVL
                 yield return kv;
             }
 
-            if (truncateWal) await executeWalTruncate();
+            if (truncateWal) await Clean();
         }
 
-        private async Task executeWalTruncate()
+        public async Task Clean()
         {
             using var cmd = _connection.CreateCommand();
             cmd.CommandText = $@"PRAGMA wal_checkpoint(TRUNCATE);";

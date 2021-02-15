@@ -112,7 +112,7 @@ namespace KVL.Tests
                 .Select(x => Encoding.UTF8.GetString(x.Key))
                 .ToHashSet();
             var counter = 0;
-            await foreach (var res in kvl.GetRR())
+            await foreach (var res in kvl.GetRR(true))
             {
                 counter++;
                 var key = Encoding.UTF8.GetString(res.Key);
